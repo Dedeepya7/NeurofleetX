@@ -2,6 +2,7 @@ package com.neurofleetx.controller;
 
 import com.neurofleetx.model.Vehicle;
 import com.neurofleetx.service.VehicleService;
+import com.neurofleetx.ai.PredictiveMaintenanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +13,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ai")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5507")
 public class AIModelController {
 
     @Autowired
     private VehicleService vehicleService;
+    
+    @Autowired
+    private PredictiveMaintenanceService predictiveMaintenanceService;
 
-    // Simple predictive maintenance model
+    // Predictive maintenance model using machine learning
     @PostMapping("/predict/maintenance")
     public ResponseEntity<Map<String, Object>> predictMaintenance(@RequestBody Map<String, Object> requestData) {
         Map<String, Object> response = new HashMap<>();
@@ -33,12 +37,11 @@ public class AIModelController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Simple AI prediction algorithm based on vehicle metrics
-            Map<String, Object> prediction = predictMaintenanceNeeds(vehicle);
+            // Use advanced AI prediction algorithm based on vehicle metrics
+            Map<String, Object> prediction = predictiveMaintenanceService.predictMaintenance(vehicle);
             
             response.put("vehicleId", vehicleId);
             response.put("prediction", prediction);
-            response.put("confidence", 0.85); // Simulated confidence score
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -47,7 +50,7 @@ public class AIModelController {
         }
     }
 
-    // Batch prediction for all vehicles
+    // Batch prediction for all vehicles using advanced ML model
     @GetMapping("/predict/maintenance/all")
     public ResponseEntity<Map<String, Object>> predictAllVehicles() {
         Map<String, Object> response = new HashMap<>();
@@ -57,7 +60,7 @@ public class AIModelController {
             Map<Long, Map<String, Object>> predictions = new HashMap<>();
             
             for (Vehicle vehicle : vehicles) {
-                Map<String, Object> prediction = predictMaintenanceNeeds(vehicle);
+                Map<String, Object> prediction = predictiveMaintenanceService.predictMaintenance(vehicle);
                 predictions.put(vehicle.getId(), prediction);
             }
             
@@ -70,76 +73,23 @@ public class AIModelController {
             return ResponseEntity.internalServerError().body(response);
         }
     }
-
-    // Simple predictive algorithm based on vehicle metrics
-    private Map<String, Object> predictMaintenanceNeeds(Vehicle vehicle) {
-        Map<String, Object> prediction = new HashMap<>();
-        
-        // Calculate health score based on various factors
-        double batteryLevel = vehicle.getBatteryLevel() != null ? vehicle.getBatteryLevel() : 100.0;
-        double fuelLevel = vehicle.getFuelLevel() != null ? vehicle.getFuelLevel() : 100.0;
-        int healthScore = vehicle.getHealthScore() != null ? vehicle.getHealthScore() : 80;
-        long mileage = vehicle.getMileage() != null ? vehicle.getMileage() : 0;
-        double speed = vehicle.getSpeed() != null ? vehicle.getSpeed() : 0;
-        
-        // Simple AI logic for demonstration
-        boolean needsMaintenance = false;
-        String maintenanceType = "None";
-        int predictedDays = 30; // Default days until maintenance
-        
-        // Battery electric vehicles
-        if (vehicle.getType().equals("SEDAN") && batteryLevel < 20) {
-            needsMaintenance = true;
-            maintenanceType = "Battery Service";
-            predictedDays = (int) (batteryLevel / 2); // Lower battery = sooner maintenance
-        }
-        // Fuel vehicles
-        else if (fuelLevel < 15) {
-            needsMaintenance = true;
-            maintenanceType = "Fuel System Check";
-            predictedDays = (int) (fuelLevel / 1.5);
-        }
-        // High mileage vehicles
-        else if (mileage > 50000 && healthScore < 70) {
-            needsMaintenance = true;
-            maintenanceType = "General Maintenance";
-            predictedDays = Math.max(1, 90 - (int)(mileage / 1000));
-        }
-        // Low health score
-        else if (healthScore < 60) {
-            needsMaintenance = true;
-            maintenanceType = "Comprehensive Check";
-            predictedDays = Math.max(1, healthScore / 2);
-        }
-        
-        // Component-specific predictions
-        Map<String, Object> componentPredictions = new HashMap<>();
-        componentPredictions.put("engine", healthScore > 70 ? "Good" : healthScore > 50 ? "Attention Needed" : "Immediate Service");
-        componentPredictions.put("battery", batteryLevel > 50 ? "Good" : batteryLevel > 20 ? "Monitor" : "Replace Soon");
-        componentPredictions.put("tires", mileage > 40000 ? "Check Wear" : "Good");
-        componentPredictions.put("brakes", speed > 80 ? "Inspect" : "Good");
-        
-        prediction.put("needsMaintenance", needsMaintenance);
-        prediction.put("maintenanceType", maintenanceType);
-        prediction.put("predictedDays", predictedDays);
-        prediction.put("components", componentPredictions);
-        prediction.put("recommendedActions", getRecommendedActions(maintenanceType));
-        
-        return prediction;
-    }
     
-    private String[] getRecommendedActions(String maintenanceType) {
-        switch (maintenanceType) {
-            case "Battery Service":
-                return new String[]{"Check battery connections", "Test battery capacity", "Clean terminals"};
-            case "Fuel System Check":
-                return new String[]{"Inspect fuel pump", "Check fuel filter", "Test injectors"};
-            case "General Maintenance":
-                return new String[]{"Oil change", "Filter replacement", "Tire rotation"};
-            case "Comprehensive Check":
-                return new String[]{"Full diagnostic scan", "Fluid level checks", "Safety inspection"};
-            default:
-                return new String[]{"Regular monitoring", "Routine checkup"};
+    // Train the AI model with current vehicle data
+    @PostMapping("/train")
+    public ResponseEntity<Map<String, Object>> trainModel() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            List<Vehicle> vehicles = vehicleService.getAllVehicles();
+            predictiveMaintenanceService.trainModel(vehicles);
+            
+            response.put("message", "AI model trained successfully with " + vehicles.size() + " vehicles");
+            response.put("vehicleCount", vehicles.size());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", "Model training failed: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
         }
     }
 }

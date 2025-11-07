@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an axios instance with default configuration
 const api = axios.create({
-  baseURL: 'http://localhost:8084/api', // Spring Boot backend URL
+  baseURL: 'http://localhost:8083/api', // Spring Boot backend URL
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -69,7 +69,10 @@ export const aiModelService = {
   predictMaintenance: (vehicleId) => api.post('/ai/predict/maintenance', { vehicleId }),
   
   // Get predictions for all vehicles
-  predictAllVehicles: () => api.get('/ai/predict/maintenance/all')
+  predictAllVehicles: () => api.get('/ai/predict/maintenance/all'),
+  
+  // Train the AI model
+  trainModel: () => api.post('/ai/train')
 };
 
 // User API endpoints
