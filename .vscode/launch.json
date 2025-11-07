@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "NeuroFleetXApplication",
+      "request": "launch",
+      "mainClass": "com.neurofleetx.NeuroFleetXApplication",
+      "projectName": "NeuroFleetX_515035b6"
+    },
+    {
+      "name": "Launch Vite (neurofleetx-vite)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5174",
+      "webRoot": "${workspaceFolder}/frontend/neurofleetx-vite",
+      "preLaunchTask": "Start Vite (neurofleetx-vite)",
+      "runtimeArgs": [
+        "--new-window"
+      ]
+    }
+  ]
+}
