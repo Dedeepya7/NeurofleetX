@@ -54,7 +54,7 @@ The system consists of two main components:
    mvn spring-boot:run
    ```
 
-4. The backend API will be available at: http://localhost:8080
+4. The backend API will be available at: http://localhost:8083
 
 ## API Endpoints
 - `GET /api/vehicles` - Get all vehicles
